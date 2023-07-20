@@ -26,6 +26,8 @@ import com.asus.placestovisit.databinding.ActivityMainBinding;
 import com.asus.placestovisit.databinding.ActivityPlacesBinding;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.ByteArrayOutputStream;
+
 public class PlacesActivity extends AppCompatActivity {
 
     private ActivityPlacesBinding binding;
@@ -47,7 +49,46 @@ public class PlacesActivity extends AppCompatActivity {
 
     public void save(View view){
 
+        String name = binding.editTextName.getText().toString();
+        String country = binding.editTextCountry.getText().toString();
+        String year = binding.editTextYear.getText().toString();
+
+        Bitmap smallImage = makeSmallerImage(selectedImage,300);
+
+        // convert image to byte array
+        // because it is needed so we can save the image in SQLITE
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        smallImage.compress(Bitmap.CompressFormat.PNG,50,outputStream);
+        byte[] byteImageArray = outputStream.toByteArray();
+
     }
+
+    public Bitmap makeSmallerImage(Bitmap image , int maximumSize){
+
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        float imageRatio = (float) (width/height);
+
+        if (imageRatio>1){
+            // Image horizontal if greater than 1
+            // landscape image or horizontal image
+            width = maximumSize;
+            height = (int) (width/imageRatio);
+
+        }else{
+            // Image vertical if less than 1
+            // partrait image or vertical image
+            height = maximumSize;
+            width = (int) (height * imageRatio);
+
+        }
+
+        return Bitmap.createScaledBitmap(image,width,height,true);
+
+    }
+
 
     public void selectImage(View view){
 
