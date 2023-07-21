@@ -13,6 +13,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
@@ -36,6 +38,7 @@ public class PlacesActivity extends AppCompatActivity {
     ActivityResultLauncher<String> permissionLauncher;          // it use to request permission
 
     Bitmap selectedImage;
+    SQLiteDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +64,31 @@ public class PlacesActivity extends AppCompatActivity {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         smallImage.compress(Bitmap.CompressFormat.PNG,50,outputStream);
         byte[] byteImageArray = outputStream.toByteArray();
+
+
+
+        // Data Access Layer
+        try {
+
+            database = this.openOrCreateDatabase("PLACES",MODE_PRIVATE,null);
+            database.execSQL("CREATE TABLE IF NOT EXISTS Places (id INTEGER PRIMARY KEY,name VARCHAR, country VARCHAR, year VARCHAR, image BLOB)");
+
+            String sqlInsertString = "INSERT INTO Places (name,country,year) VALUES (?,?,?,?)";
+            SQLiteStatement sqLiteStatement = database.compileStatement(sqlInsertString);
+            sqLiteStatement.bindString(1,name);
+            sqLiteStatement.bindString(2,country);
+            sqLiteStatement.bindString(3,year);
+            sqLiteStatement.bindBlob(4,byteImageArray);
+            sqLiteStatement.execute();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        Intent intent = new Intent(PlacesActivity.this,MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);        // closes all previous activities
+        startActivity(intent);
+
 
     }
 
