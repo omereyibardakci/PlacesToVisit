@@ -13,9 +13,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Build;
@@ -47,8 +49,60 @@ public class PlacesActivity extends AppCompatActivity {
         View view = binding.getRoot();
         setContentView(view);
 
+        // open or create database
+        database = this.openOrCreateDatabase("PLACES",MODE_PRIVATE,null);
+
+
         registerLauncher();
+
+
+        Intent intent = getIntent();
+        String info = intent.getStringExtra("info");
+        if (info.equals("new")){
+            // new add places
+            binding.button.setVisibility(View.VISIBLE);
+
+        }else {
+            // old places
+            int placesId = intent.getIntExtra("placesId",1);
+            binding.button.setVisibility(View.INVISIBLE);
+
+            // pull data for show the places
+            try {
+
+                Cursor cursor = database.rawQuery("SELECT * FROM Places WHERE id = ?",new String[] {String.valueOf(placesId)});
+
+                int nameIndex = cursor. getColumnIndex("name");
+                int countryIndex = cursor.getColumnIndex("country");
+                int yearIndex = cursor.getColumnIndex("year");
+                int imageIndex = cursor.getColumnIndex("image");
+
+                while (cursor.moveToNext()){
+
+                    binding.editTextName.setText(cursor.getString(nameIndex));
+                    binding.editTextCountry.setText(cursor.getString(countryIndex));
+                    binding.editTextYear.setText(cursor.getString(yearIndex));
+
+
+                    // byte array is not put imageview
+                    // convert bitmap to put byte array into imageview
+                    byte [] bytes = cursor.getBlob(imageIndex);
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+                    binding.imageView.setImageBitmap(bitmap);
+
+                }
+                cursor.close();
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+
+        }
+
     }
+
+
 
     public void save(View view){
 
@@ -58,9 +112,9 @@ public class PlacesActivity extends AppCompatActivity {
 
         Bitmap smallImage = makeSmallerImage(selectedImage,300);
 
+
         // convert image to byte array
         // because it is needed so we can save the image in SQLITE
-
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         smallImage.compress(Bitmap.CompressFormat.PNG,50,outputStream);
         byte[] byteImageArray = outputStream.toByteArray();
@@ -70,10 +124,9 @@ public class PlacesActivity extends AppCompatActivity {
         // Data Access Layer
         try {
 
-            database = this.openOrCreateDatabase("PLACES",MODE_PRIVATE,null);
             database.execSQL("CREATE TABLE IF NOT EXISTS Places (id INTEGER PRIMARY KEY,name VARCHAR, country VARCHAR, year VARCHAR, image BLOB)");
 
-            String sqlInsertString = "INSERT INTO Places (name,country,year) VALUES (?,?,?,?)";
+            String sqlInsertString = "INSERT INTO Places (name,country,year,image) VALUES (?,?,?,?)";
             SQLiteStatement sqLiteStatement = database.compileStatement(sqlInsertString);
             sqLiteStatement.bindString(1,name);
             sqLiteStatement.bindString(2,country);
@@ -236,7 +289,7 @@ public class PlacesActivity extends AppCompatActivity {
                     activityResultLauncher.launch(intentToGallary);
                 }else{
                     // permission denied
-                    Toast.makeText(PlacesActivity.this,"Permission needed!",Toast.LENGTH_LONG);
+                    Toast.makeText(PlacesActivity.this,"Permission needed!",Toast.LENGTH_LONG).show();
                 }
 
             }

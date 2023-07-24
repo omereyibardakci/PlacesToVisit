@@ -1,5 +1,6 @@
 package com.asus.placestovisit;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,10 +30,18 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlacesHold
     }
 
     @Override
-    public void onBindViewHolder(@NonNull PlacesHolder holder, int position) {
+    public void onBindViewHolder(@NonNull PlacesHolder holder, @SuppressLint("RecyclerView") int position) {
 
         holder.binding.recyclerViewTextView.setText(placesArrayList.get(position).name);
-
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(holder.itemView.getContext(),PlacesActivity.class);
+                intent.putExtra("info","old");
+                intent.putExtra("placesId",placesArrayList.get(position).id);
+                holder.itemView.getContext().startActivity(intent);
+            }
+        });
 
     }
 

@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(item.getItemId()==R.id.addPlace){
             Intent intent=new Intent(this,PlacesActivity.class);
+            intent.putExtra("info","new");
             startActivity(intent);
         }
 
